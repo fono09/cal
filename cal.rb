@@ -16,7 +16,7 @@ def user_credentials
 end
 
 configure do
-	Google::Apis::ClientOptions.default.application_name = 'fono.jp cal sample'
+	Google::Apis::ClientOptions.default.application_name = 'Class schedule into your calendar'
 	Google::Apis::ClientOptions.default.application_version = '1.0.0'
 	calendar_api = Google::Apis::CalendarV3::CalendarService.new
 
@@ -53,6 +53,7 @@ end
 
 get '/' do
 	events = calendar.list_events('primary', options: { authorization: user_credentials })
+	content_type 'application/json', :charset => 'utf-8'
 	[200, {'Content-Type' => 'application/json'}, events.to_h.to_json]
 end
 
