@@ -4,10 +4,12 @@ require 'sinatra'
 
 enable :sessions
 
+def calendar; settings.calendar; end
+
 def user_credentials
 	@authorization ||= (
 		auth = settings.authorization.dup
-		auth.redirect_uri = to('/callback')
+		auth.redirect_uri = to('/oauth2callback')
 		auth.update_token!(session)
 		auth
 	)
@@ -27,8 +29,8 @@ configure do
 end
 
 before do
-	unless user_credentials.access_token || request.path_info =~ /^\/oauth2/
-		redirect to('/authorize')
+	unless user_credentials.access_token || request.path_info =~ /^\/oauth2/ then
+		redirect to('/oauth2authorize')
 	end
 end
 
@@ -39,11 +41,11 @@ after do
 	session[:issued_at] = user_credentials.issued_at
 end
 
-get '/authorize' do
+get '/oauth2authorize' do
 	redirect user_credentials.authorization_uri.to_s, 303
 end
 
-get '/callback' do
+get '/oauth2callback' do
 	user_credentials.code = params[:code] if params[:code]
 	user_credentials.fetch_access_token!
 	redirect to('/')
