@@ -1,4 +1,6 @@
 
+require 'json'
+
 class Object
 	def to_fj
 		obj = self
