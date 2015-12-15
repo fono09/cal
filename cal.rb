@@ -1,10 +1,13 @@
 require 'google/apis/calendar_v3'
+require 'google/apis/plus_v1'
 require 'google/api_client/client_secrets'
+require 'json'
 require 'sinatra'
 
 enable :sessions
 
 def calendar; settings.calendar; end
+def plus; settings.plus; end
 
 def user_credentials
 	@authorization ||= (
@@ -16,16 +19,22 @@ def user_credentials
 end
 
 configure do
-	Google::Apis::ClientOptions.default.application_name = 'Class schedule into your calendar'
+	Google::Apis::ClientOptions.default.application_name = 'TT-Shift'
 	Google::Apis::ClientOptions.default.application_version = '1.0.0'
+	plus_api = Google::Apis::PlusV1::PlusService.new
 	calendar_api = Google::Apis::CalendarV3::CalendarService.new
 
 	client_secrets = Google::APIClient::ClientSecrets.load
 	authorization = client_secrets.to_authorization
-	authorization.scope = 'https://www.googleapis.com/auth/calendar'
+	authorization.scope = [
+		'https://www.googleapis.com/auth/calendar',
+		'https://www.googleapis.com/auth/userinfo.email',
+	]
 
-	set :authorization, authorization
-	set :calendar, calendar_api
+
+	set :authorization => authorization,
+		:calendar => calendar_api,
+		:plus => plus_api
 end
 
 before do
@@ -52,9 +61,31 @@ get '/oauth2callback' do
 end
 
 get '/' do
-	events = calendar.list_events('primary', options: { authorization: user_credentials })
-	content_type 'application/json', :charset => 'utf-8'
-	[200, {'Content-Type' => 'application/json'}, events.to_h.to_json]
+	
+	buff = "calendar.list_events.items: \n"
+	calendar.list_events('primary', options:{ authorization: user_credentials}).items.each do |obj|
+		buff += obj.summary
+	end
+	buff += "==========\n"
+	buff += "plus.get_person.emails: \n"
+	plus.get_person('me',fields:'emails',options:{authorization: user_credentials}).emails.each do |obj|
+		buff += obj.value.inspect
+	end
+	buff
 end
+
+get '/calendar/list' do
+	ret = calendar.list_calendar_lists(max_results:10,options:{authorization: user_credentials}).items
+	[200,{'Content-Type'=>'text/plain'},ret.to_json]
+end
+
+post '/calendar/add' do 
+end
+
+post '/calendar/edit' do
+end
+
+
+
 
 
