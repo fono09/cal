@@ -67,16 +67,11 @@ end
 
 get '/' do
 	
-	buff = "calendar.list_events.items: \n"
-	calendar.list_events('primary', options:{ authorization: user_credentials}).items.each do |obj|
-		buff += obj.summary
-	end
-	buff += "==========\n"
-	buff += "plus.get_person.emails: \n"
-	plus.get_person('me',fields:'emails',options:{authorization: user_credentials}).emails.each do |obj|
-		buff += obj.value.inspect
-	end
-	buff
+	ret = {
+		:primary_calendar => calendar.list_events('primary', options:{ authorization: user_credentials}).items,
+  		:emails => plus.get_person('me',fields:'emails',options:{authorization: user_credentials}).emails
+	}
+	[200,{'Content-Type'=>'application/json'},ret.to_fj]
 end
 
 get '/calendar/list' do
