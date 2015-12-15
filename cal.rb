@@ -3,7 +3,7 @@ require 'google/apis/plus_v1'
 require 'google/api_client/client_secrets'
 require 'json'
 require 'sinatra'
-require './fancy_json.rb'
+require './fancy_json/fancy_json.rb'
 
 enable :sessions
 
