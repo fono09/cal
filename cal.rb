@@ -81,7 +81,7 @@ end
 
 get '/calendar/list' do
 	ret = calendar.list_calendar_lists(max_results:10,options:{authorization: user_credentials}).items
-	[200,{'Content-Type'=>'text/plain'},ret.to_fj]
+	[200,{'Content-Type'=>'application/json'},ret.to_fj]
 end
 
 post '/calendar/add' do 
@@ -90,5 +90,14 @@ end
 post '/calendar/edit' do
 end
 
-get '/calendar/:id/events/' do
+get '/calendar/:id/event/list' do
+	ret = []
+	page_token = nil
+	begin
+		temp = calendar.list_events(params[:id],page_token: page_token,options:{ authorization: user_credentials})
+		ret.concat(temp.items)
+	end  while page_token = temp.next_page_token
+	
+	[200,{'Content-Type'=>'application/json'},ret.to_fj]
 end
+
