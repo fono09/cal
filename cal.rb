@@ -3,6 +3,7 @@ require 'google/apis/plus_v1'
 require 'google/api_client/client_secrets'
 require 'json'
 require 'sinatra'
+require './fancy_json.rb'
 
 enable :sessions
 
@@ -50,6 +51,10 @@ after do
 	session[:issued_at] = user_credentials.issued_at
 end
 
+helpers do
+end
+			
+	
 get '/oauth2authorize' do
 	redirect user_credentials.authorization_uri.to_s, 303
 end
@@ -76,7 +81,7 @@ end
 
 get '/calendar/list' do
 	ret = calendar.list_calendar_lists(max_results:10,options:{authorization: user_credentials}).items
-	[200,{'Content-Type'=>'text/plain'},ret.to_json]
+	[200,{'Content-Type'=>'text/plain'},ret.to_fj]
 end
 
 post '/calendar/add' do 
@@ -85,7 +90,5 @@ end
 post '/calendar/edit' do
 end
 
-
-
-
-
+get '/calendar/:id/events/' do
+end
