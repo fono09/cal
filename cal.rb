@@ -1,5 +1,5 @@
 require 'google/apis/calendar_v3'
-require 'google/apis/plus_v1'
+require 'google/apis/oauth2_v2'
 require 'google/api_client/client_secrets'
 require 'json'
 require 'sinatra'
@@ -8,7 +8,7 @@ require './fancy_json/fancy_json.rb'
 enable :sessions
 
 def calendar; settings.calendar; end
-def plus; settings.plus; end
+def userinfo; settings.userinfo; end
 
 def user_credentials
 	@authorization ||= (
@@ -22,7 +22,7 @@ end
 configure do
 	Google::Apis::ClientOptions.default.application_name = 'TT-Shift'
 	Google::Apis::ClientOptions.default.application_version = '1.0.0'
-	plus_api = Google::Apis::PlusV1::PlusService.new
+	userinfo_api = Google::Apis::Oauth2V2::Oauth2Service.new
 	calendar_api = Google::Apis::CalendarV3::CalendarService.new
 
 	client_secrets = Google::APIClient::ClientSecrets.load
@@ -31,11 +31,12 @@ configure do
 		'https://www.googleapis.com/auth/calendar',
 		'https://www.googleapis.com/auth/userinfo.email',
 	]
+	authorization.authorization_uri(:access_type => :offline, :approval_prompt => :force)
 
 
 	set :authorization => authorization,
-		:calendar => calendar_api,
-		:plus => plus_api
+		:userinfo => userinfo_api,
+		:calendar => calendar_api
 end
 
 before do
@@ -69,7 +70,7 @@ get '/' do
 	
 	ret = {
 		:primary_calendar => calendar.list_events('primary', options:{ authorization: user_credentials}).items,
-  		:emails => plus.get_person('me',fields:'emails',options:{authorization: user_credentials}).emails
+  		:userinfo => userinfo.get_userinfo(fields:'email', options:{ authorization: user_credentials}),
 	}
 	[200,{'Content-Type'=>'application/json'},ret.to_fj]
 end
@@ -80,6 +81,10 @@ get '/calendar/list' do
 end
 
 post '/calendar/add' do 
+	cal = Google::Apis::CalendarV3::Calendar.new(params)
+	fields = params.keys.join(',')
+	ret = calender.insert_calendar(cal,fields:fields,options:{authentication: user_credentials})
+	[200,{'Content-Type'=>'application/json'},ret.to_fj]
 end
 
 post '/calendar/edit' do
