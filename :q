@@ -21,6 +21,18 @@ def user_credentials
 	)
 end
 
+client_secrets
+	def self.revoke ||= (
+		uri = URI('https://accounts.google.com/o/oauth2/revoke')
+		params = { :token => @access_token }
+		uri.query = URI.encode_www_form(params)
+		response = Net::HTTP.get(uri)
+	end
+end
+
+
+
+
 configure do
 	Google::Apis::ClientOptions.default.application_name = 'TT-Shift'
 	Google::Apis::ClientOptions.default.application_version = '1.0.0'
@@ -34,6 +46,8 @@ configure do
 		'https://www.googleapis.com/auth/userinfo.email',
 	]
 	authorization.authorization_uri(:access_type => :offline, :approval_prompt => :force)
+
+
 	set :authorization => authorization,
 		:userinfo => userinfo_api,
 		:calendar => calendar_api
@@ -104,11 +118,7 @@ get '/calendar/:id/event/list' do
 end
 
 get '/logout' do
-	uri = URI('https://accounts.google.com/o/oauth2/revoke')
-	params = { :token => user_credentials.access_token }
-	uri.query = URI.encode_www_form(params)
-	Net::HTTP.get(uri)
-	user_credentials.clear_credentials!
+	client_secrets.revoke
 	session.clear
 	redirect to('/')
 end
