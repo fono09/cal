@@ -6,11 +6,14 @@ require 'sinatra'
 require './fancy_json/fancy_json.rb'
 require 'uri'
 require 'net/https'
+require 'erubis'
 
 enable :sessions
 
 def calendar; settings.calendar; end
 def userinfo; settings.userinfo; end
+
+set :views, settings.root + '/views'
 
 def user_credentials
 	@authorization ||= (
@@ -66,6 +69,11 @@ get '/oauth2callback' do
 	redirect to('/')
 end
 
+get '/skeleton' do
+	@test = "ababababababababababababa"
+	erb :skeleton
+end
+
 get '/' do
 	
 	ret = {
@@ -81,12 +89,14 @@ get '/calendar/list' do
 end
 
 post '/calendar/add' do 
-	cal = Google::Apis::CalendarV3::Calendar.new(params)
-	return_insert_calendar = calender.insert_calendar(cal,options:{authentication: user_credentials})
-	params[:id] = return_insert_calendar.id
-	cal_list = Google::Apis::CalendarV3::CalendarListEntry.new(params)
-	return_update_calendar_list = calendar.update_dalendar_list(calendar_id,calendar_list_entry_object:cal_list)
-	[200,{'Content-Type'=>'application/json'},ret.to_fj]
+	cal = Google::Apis::CalendarV3::Calendar.new()
+	cal.summary = params[:summary]
+	cal.description = params[:description]
+	ret_insetr_cal = calender.insert_calendar(cal,options:{authentication: user_credentials})
+	calendar_id = ret_cal.id
+	entry = Google::Apis::CalendarV3::CalendarListEntry.new()
+	ret_update_callist = calendar.update_calendar_list(calendar_id,calendar_list_entry_object:cal_list)
+	[200,{'Content-Type'=>'application/json'},ret_update_callist.to_fj]
 end
 
 post '/calendar/edit' do
