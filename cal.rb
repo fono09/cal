@@ -94,13 +94,12 @@ post '/calendar/add' do
 	cal.summary = params[:summary] if params[:summary]
 	cal.description = params[:description] if params[:description]
 	ret = calender.insert_calendar(cal,options:{authentication: user_credentials})
-	calendar_id = ret.id
 
 	if params[:color_id]
 		entry = Google::Apis::CalendarV3::CalendarListEntry.new()
-		entry.id = calendar.id
+		entry.id = ret.id
 		entry.color_id = params[:color_id]
-		ret = calendar.update_calendar_list(calendar_id,calendar_list_entry_object:entry)
+		ret = calendar.update_calendar_list(entry.id,calendar_list_entry_object:entry)
 	end
 
 	[200,{'Content-Type'=>'application/json'},ret.to_fj]
