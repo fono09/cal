@@ -89,14 +89,21 @@ get '/calendar/list' do
 end
 
 post '/calendar/add' do 
+	return 400 unless params[:summary] && params[:description]
 	cal = Google::Apis::CalendarV3::Calendar.new()
-	cal.summary = params[:summary]
-	cal.description = params[:description]
-	ret_insetr_cal = calender.insert_calendar(cal,options:{authentication: user_credentials})
-	calendar_id = ret_cal.id
-	entry = Google::Apis::CalendarV3::CalendarListEntry.new()
-	ret_update_callist = calendar.update_calendar_list(calendar_id,calendar_list_entry_object:cal_list)
-	[200,{'Content-Type'=>'application/json'},ret_update_callist.to_fj]
+	cal.summary = params[:summary] if params[:summary]
+	cal.description = params[:description] if params[:description]
+	ret = calender.insert_calendar(cal,options:{authentication: user_credentials})
+	calendar_id = ret.id
+
+	if params[:color_id]
+		entry = Google::Apis::CalendarV3::CalendarListEntry.new()
+		entry.id = calendar.id
+		entry.color_id = params[:color_id]
+		ret = calendar.update_calendar_list(calendar_id,calendar_list_entry_object:entry)
+	end
+
+	[200,{'Content-Type'=>'application/json'},ret.to_fj]
 end
 
 post '/calendar/edit' do
