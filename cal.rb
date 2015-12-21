@@ -70,7 +70,7 @@ get '/oauth2callback' do
 end
 
 get '/skeleton' do
-	@test = "ababababababababababababa"
+	@test = "<%= value to output %> <% expr to execute %>"
 	erb :skeleton
 end
 

@@ -4,8 +4,8 @@
 </head>
 <body>
 <h1>erubis template test</h1>
-<% 100.times do |i| %>
-	<%= [@test,i] %>
-<% end %>
+<code><%= @test %></code>
+<% @the_hash = { :a=>1,:b=>1,:c=>2,:d=>4,:e=>7 } %>
+<%= @the_hash.to_fj %>
 </body>
 </html>
